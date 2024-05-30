@@ -13,29 +13,34 @@ class SetupController extends Controller
 
     public function changeEnv($data = array())
     {
+        // Path to the indicator file
+        $indicatorFilePath = base_path() . '/env_updated_indicator.txt';
+    
+        // Check if the indicator file exists
+        if (file_exists($indicatorFilePath)) {
+            // If the file exists, return without making changes
+            return true;
+        }
+    
         if (count($data) > 0) {
-
             // Read .env-file
             $env = file_get_contents(base_path() . '/.env');
-
+    
             // Split string on every " " and write into array
             $env = preg_split('/(\r\n|\n|\r)/', $env);
-
+    
             // Loop through given data
             foreach ((array) $data as $key => $value) {
-
                 // Loop through .env-data
                 foreach ($env as $env_key => $env_value) {
-
                     // Turn the value into an array and stop after the first split
                     // So it's not possible to split e.g. the App-Key by accident
                     $entry = explode("=", $env_value, 2);
-
+    
                     // Check, if new key fits the actual .env-key
                     if ($entry[0] == $key) {
                         // If yes, overwrite it with the new one
                         if ($value !== null) {
-
                             $env[$env_key] = $key . "=" . $value;
                         }
                     } else {
@@ -44,19 +49,22 @@ class SetupController extends Controller
                     }
                 }
             }
-
-            // Turn the array back to an String
+    
+            // Turn the array back to a string
             $env = implode("\n", $env);
-
-            // And overwrite the .env with the new data
+    
+            // Overwrite the .env with the new data
             file_put_contents(base_path() . '/.env', $env);
-
+    
+            // Create the indicator file to show the function has run
+            file_put_contents($indicatorFilePath, 'The changeEnv function has run.');
+    
             return true;
         } else {
             return false;
         }
     }
-
+    
 
     public function viewStep1()
     {
