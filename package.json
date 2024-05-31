@@ -59,19 +59,31 @@
         "vuex": "^3.6.0"
     },
     "devDependencies": {
+        "@popperjs/core": "^2.10.2",
         "@vue/composition-api": "^1.0.0-rc.5",
         "@vue/eslint-config-prettier": "^6.0.0",
         "babel-eslint": "^10.1.0",
+        "bootstrap": "^5.1.3",
         "copy-webpack-plugin": "^6.4.1",
-        "eslint": "^7.17.0",
+        "eslint": "^6.2.0",
         "eslint-plugin-vue": "^6.2.2",
         "mini-css-extract-plugin": "^1.3.9",
         "node-sass": "^4.14.1",
-        "sass-loader": "^9.0.3",
+        "sass": "^1.32.11",
+        "sass-loader": "^11.0.1",
         "targets-webpack-plugin": "^3.0.0",
         "vue-loader": "^15.9.6",
         "vue-template-compiler": "^2.6.12",
         "webpack-bundle-analyzer": "^4.4.0",
         "webpack-i18n-extractor-plugin": "^2.0.7"
-    }
+    },
+    "name": "posmanagement",
+    "version": "1.0.0",
+    "description": "-   Updated : bug Fixed in backup\r -   Added : Support IE",
+    "main": "webpack.mix.js",
+    "directories": {
+        "test": "tests"
+    },
+    "author": "",
+    "license": "ISC"
 }

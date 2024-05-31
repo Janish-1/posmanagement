@@ -75,7 +75,6 @@ class ReportController extends BaseController
         }
 
         return response()->json(['data' => $data, 'days' => $days]);
-
     }
 
     //----------------- Purchases Chart -----------------------\\
@@ -122,7 +121,6 @@ class ReportController extends BaseController
         }
 
         return response()->json(['data' => $data, 'days' => $days]);
-
     }
 
     //-------------------- Get Top 5 Customers -------------\\
@@ -171,7 +169,6 @@ class ReportController extends BaseController
             'product_report' => $Top_Products_Year,
             'report_dashboard' => $report_dashboard,
         ]);
-
     }
 
     //----------------- Payment Chart js -----------------------\\
@@ -284,7 +281,6 @@ class ReportController extends BaseController
             'payment_received' => $data_recieved,
             'days' => $days,
         ]);
-
     }
 
     //----------------- array merge -----------------------\\
@@ -409,11 +405,11 @@ class ReportController extends BaseController
             ->get();
 
         // Stock Alerts
-        $product_warehouse_data = product_warehouse::with('warehouse', 'product' ,'productVariant')
-        ->join('products', 'product_warehouse.product_id', '=', 'products.id')
-        ->whereRaw('qte <= stock_alert')
-        ->where('product_warehouse.deleted_at', null)
-        ->take('5')->get();
+        $product_warehouse_data = product_warehouse::with('warehouse', 'product', 'productVariant')
+            ->join('products', 'product_warehouse.product_id', '=', 'products.id')
+            ->whereRaw('qte <= stock_alert')
+            ->where('product_warehouse.deleted_at', null)
+            ->take('5')->get();
 
         $stock_alert = [];
         if ($product_warehouse_data->isNotEmpty()) {
@@ -432,11 +428,10 @@ class ReportController extends BaseController
                     $stock_alert[] = $item;
                 }
             }
-
         }
-       
+
         //calcul profit
-        $product_sale_data = Sale::join('sale_details' , 'sales.id', '=', 'sale_details.sale_id')
+        $product_sale_data = Sale::join('sale_details', 'sales.id', '=', 'sale_details.sale_id')
             ->select(DB::raw('sale_details.product_id , sum(sale_details.quantity) as sold_qty , sum(sale_details.total) as sold_amount'))
             ->where('sales.deleted_at', '=', null)
             ->where(function ($query) use ($view_records) {
@@ -453,84 +448,83 @@ class ReportController extends BaseController
         $profit = 0;
 
 
-        foreach($product_sale_data as $key => $product_sale){
+        foreach ($product_sale_data as $key => $product_sale) {
 
-            $product_purchase_data = PurchaseDetail::where('product_id' , $product_sale->product_id)->get();
+            $product_purchase_data = PurchaseDetail::where('product_id', $product_sale->product_id)->get();
 
             $purchased_qty = 0;
-            $purchased_amount = 0;   
+            $purchased_amount = 0;
             $sold_qty = $product_sale->sold_qty;
             $product_revenue += $product_sale->sold_amount;
 
             foreach ($product_purchase_data as $key => $product_purchase) {
                 $purchased_qty += $product_purchase->quantity;
                 $purchased_amount += $product_purchase->total;
-                if($purchased_qty >= $sold_qty){
+                if ($purchased_qty >= $sold_qty) {
                     $qty_diff = $purchased_qty - $sold_qty;
                     $unit_cost = $product_purchase->total / $product_purchase->quantity;
                     $purchased_amount -= ($qty_diff * $unit_cost);
                     break;
-
                 }
             }
 
-        $product_cost += $purchased_amount;
-     }
+            $product_cost += $purchased_amount;
+        }
 
         $data['Amount_EXP'] = Expense::where('deleted_at', '=', null)
-        ->where('date', \Carbon\Carbon::today()->startOFDay())
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('user_id', '=', Auth::user()->id);
-            }
-        })
-        ->get(DB::raw('SUM(amount)  As sum'))
-        ->first()->sum;
+            ->where('date', \Carbon\Carbon::today()->startOFDay())
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('user_id', '=', Auth::user()->id);
+                }
+            })
+            ->get(DB::raw('SUM(amount)  As sum'))
+            ->first()->sum;
 
 
         $data['today_sales'] = Sale::where('deleted_at', '=', null)
-        ->where('date', \Carbon\Carbon::today())
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('user_id', '=', Auth::user()->id);
-            }
-        })
-        ->get(DB::raw('SUM(GrandTotal)  As sum'))
-        ->first()->sum;
+            ->where('date', \Carbon\Carbon::today())
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('user_id', '=', Auth::user()->id);
+                }
+            })
+            ->get(DB::raw('SUM(GrandTotal)  As sum'))
+            ->first()->sum;
 
         $data['return_sales'] = SaleReturn::where('deleted_at', '=', null)
-        ->where('date', \Carbon\Carbon::today())
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('user_id', '=', Auth::user()->id);
-            }
-        })
-        ->get(DB::raw('SUM(GrandTotal)  As sum'))
-        ->first()->sum; 
+            ->where('date', \Carbon\Carbon::today())
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('user_id', '=', Auth::user()->id);
+                }
+            })
+            ->get(DB::raw('SUM(GrandTotal)  As sum'))
+            ->first()->sum;
 
         $data['revenue'] = $data['today_sales'] - $data['return_sales'];
 
         $data['today_purchases'] = Purchase::where('deleted_at', '=', null)
-        ->where('date', \Carbon\Carbon::today())
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('user_id', '=', Auth::user()->id);
-            }
-        })
-        ->get(DB::raw('SUM(GrandTotal)  As sum'))
-        ->first()->sum;
+            ->where('date', \Carbon\Carbon::today())
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('user_id', '=', Auth::user()->id);
+                }
+            })
+            ->get(DB::raw('SUM(GrandTotal)  As sum'))
+            ->first()->sum;
 
         $data['purchases_return'] = PurchaseReturn::where('deleted_at', '=', null)
-        ->where('date', \Carbon\Carbon::today())
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('user_id', '=', Auth::user()->id);
-            }
-        })
-        ->get(DB::raw('SUM(GrandTotal)  As sum'))
-        ->first()->sum;
+            ->where('date', \Carbon\Carbon::today())
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('user_id', '=', Auth::user()->id);
+                }
+            })
+            ->get(DB::raw('SUM(GrandTotal)  As sum'))
+            ->first()->sum;
 
-        $data['profit'] = $data['revenue'] + $data['purchases_return'] - $product_cost ;
+        $data['profit'] = $data['revenue'] + $data['purchases_return'] - $product_cost;
         // - $data['Amount_EXP'];
 
         $last_sales = [];
@@ -565,7 +559,6 @@ class ReportController extends BaseController
             'report' => $data,
             'last_sales' => $last_sales,
         ]);
-
     }
 
     //----------------- Customers Report -----------------------\\
@@ -585,7 +578,7 @@ class ReportController extends BaseController
         $data = array();
 
         $clients = Client::where('deleted_at', '=', null)
-        // Search With Multiple Param
+            // Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('name', 'LIKE', "%{$request->search}%")
@@ -629,7 +622,6 @@ class ReportController extends BaseController
             'report' => $data,
             'totalRows' => $totalRows,
         ]);
-
     }
 
     //----------------- Customers Report By ID-----------------------\\
@@ -680,7 +672,6 @@ class ReportController extends BaseController
         $data['due'] = $data['total_amount'] - $data['total_paid'];
 
         return response()->json(['report' => $data]);
-
     }
 
     //-------------------- Get Sales By Clients -------------\\
@@ -728,7 +719,6 @@ class ReportController extends BaseController
             'totalRows' => $totalRows,
             'sales' => $data,
         ]);
-
     }
 
     //-------------------- Get Payments By Clients -------------\\
@@ -756,8 +746,11 @@ class ReportController extends BaseController
             ->join('sales', 'payment_sales.sale_id', '=', 'sales.id')
             ->where('sales.client_id', $request->id)
             ->select(
-                'payment_sales.date', 'payment_sales.Ref AS Ref', 'sales.Ref AS Sale_Ref',
-                'payment_sales.Reglement', 'payment_sales.montant'
+                'payment_sales.date',
+                'payment_sales.Ref AS Ref',
+                'sales.Ref AS Sale_Ref',
+                'payment_sales.Reglement',
+                'payment_sales.montant'
             );
 
         $totalRows = $payments->count();
@@ -770,7 +763,6 @@ class ReportController extends BaseController
             'payments' => $payments,
             'totalRows' => $totalRows,
         ]);
-
     }
 
     //-------------------- Get Quotations By Clients -------------\\
@@ -871,8 +863,8 @@ class ReportController extends BaseController
         $dir = $request->SortType;
         $helpers = new helpers();
         // Filter fields With Params to retrieve
-        $param = array(0 => 'like', 1 => 'like', 2 => '=', 3 => 'like' , 4 => '=');
-        $columns = array(0 => 'Ref', 1 => 'statut', 2 => 'provider_id', 3 => 'payment_statut' , 4 => 'date');
+        $param = array(0 => 'like', 1 => 'like', 2 => '=', 3 => 'like', 4 => '=');
+        $columns = array(0 => 'Ref', 1 => 'statut', 2 => 'provider_id', 3 => 'payment_statut', 4 => 'date');
         $data = array();
         $total = 0;
 
@@ -885,7 +877,7 @@ class ReportController extends BaseController
         $Purchases = $helpers->Show_Records($Purchases);
         //Multiple Filter
         $Filtred = $helpers->filter($Purchases, $columns, $param, $request)
-        // Search With Multiple Param
+            // Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('purchases.Ref', 'LIKE', "%{$request->search}%")
@@ -946,8 +938,8 @@ class ReportController extends BaseController
         $dir = $request->SortType;
         $helpers = new helpers();
         // Filter fields With Params to retrieve
-        $param = array(0 => 'like', 1 => 'like', 2 => '=', 3 => 'like' , 4 => '=');
-        $columns = array(0 => 'Ref', 1 => 'statut', 2 => 'client_id', 3 => 'payment_statut' , 4 => 'date');
+        $param = array(0 => 'like', 1 => 'like', 2 => '=', 3 => 'like', 4 => '=');
+        $columns = array(0 => 'Ref', 1 => 'statut', 2 => 'client_id', 3 => 'payment_statut', 4 => 'date');
         $data = array();
 
         $Sales = Sale::select('sales.*')
@@ -959,7 +951,7 @@ class ReportController extends BaseController
         $Sales = $helpers->Show_Records($Sales);
         //Multiple Filter
         $Filtred = $helpers->filter($Sales, $columns, $param, $request)
-        // Search With Multiple Param
+            // Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('sales.Ref', 'LIKE', "%{$request->search}%")
@@ -1018,7 +1010,7 @@ class ReportController extends BaseController
         $data = array();
 
         $providers = Provider::where('deleted_at', '=', null)
-        // Search With Multiple Param
+            // Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('name', 'LIKE', "%{$request->search}%")
@@ -1062,7 +1054,6 @@ class ReportController extends BaseController
             'report' => $data,
             'totalRows' => $totalRows,
         ]);
-
     }
 
     //-------------------- Get Purchases By Provider -------------\\
@@ -1111,7 +1102,6 @@ class ReportController extends BaseController
             'totalRows' => $totalRows,
             'purchases' => $data,
         ]);
-
     }
 
     //-------------------- Get Payments By Provider -------------\\
@@ -1141,8 +1131,11 @@ class ReportController extends BaseController
             ->join('purchases', 'payment_purchases.purchase_id', '=', 'purchases.id')
             ->where('purchases.provider_id', $request->id)
             ->select(
-                'payment_purchases.date', 'payment_purchases.Ref AS Ref', 'purchases.Ref AS purchase_Ref',
-                'payment_purchases.Reglement', 'payment_purchases.montant'
+                'payment_purchases.date',
+                'payment_purchases.Ref AS Ref',
+                'purchases.Ref AS purchase_Ref',
+                'payment_purchases.Reglement',
+                'payment_purchases.montant'
             );
 
         $totalRows = $payments->count();
@@ -1205,7 +1198,6 @@ class ReportController extends BaseController
             'totalRows' => $totalRows,
             'returns_supplier' => $data,
         ]);
-
     }
 
     //-------------------- Top 5 Suppliers -------------\\
@@ -1274,7 +1266,6 @@ class ReportController extends BaseController
             'data' => $data,
             'warehouses' => $warehouses,
         ], 200);
-
     }
 
     //-------------------- Get Sales By Warehouse -------------\\
@@ -1304,7 +1295,7 @@ class ReportController extends BaseController
                     return $query->where('warehouse_id', $request->warehouse_id);
                 });
             })
-        // Search With Multiple Param
+            // Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('Ref', 'LIKE', "%{$request->search}%")
@@ -1341,7 +1332,6 @@ class ReportController extends BaseController
             'totalRows' => $totalRows,
             'sales' => $data,
         ]);
-
     }
 
     //-------------------- Get Quotations By Warehouse -------------\\
@@ -1372,7 +1362,7 @@ class ReportController extends BaseController
                     return $query->where('warehouse_id', $request->warehouse_id);
                 });
             })
-        //Search With Multiple Param
+            //Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('Ref', 'LIKE', "%{$request->search}%")
@@ -1436,7 +1426,7 @@ class ReportController extends BaseController
                     return $query->where('warehouse_id', $request->warehouse_id);
                 });
             })
-        //Search With Multiple Param
+            //Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('Ref', 'LIKE', "%{$request->search}%")
@@ -1504,7 +1494,7 @@ class ReportController extends BaseController
                     return $query->where('warehouse_id', $request->warehouse_id);
                 });
             })
-        //Search With Multiple Param
+            //Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('Ref', 'LIKE', "%{$request->search}%")
@@ -1572,7 +1562,7 @@ class ReportController extends BaseController
                     return $query->where('warehouse_id', $request->warehouse_id);
                 });
             })
-        //Search With Multiple Param
+            //Search With Multiple Param
             ->where(function ($query) use ($request) {
                 return $query->when($request->filled('search'), function ($query) use ($request) {
                     return $query->where('Ref', 'LIKE', "%{$request->search}%")
@@ -1654,7 +1644,6 @@ class ReportController extends BaseController
             'stock_value' => $data,
             'warehouses' => $warehouses,
         ]);
-
     }
 
     //-------------- Count  Product Quantity Alerts ---------------\\
@@ -1737,8 +1726,8 @@ class ReportController extends BaseController
                 }
             })
             ->get(DB::raw('SUM(GrandTotal)  As sum'))
-            ->first()->sum; 
-        
+            ->first()->sum;
+
         $item['today_purchases'] = Purchase::where('deleted_at', '=', null)
             ->whereBetween('date', array($request->from, $request->to))
             ->where(function ($query) use ($view_records) {
@@ -1748,7 +1737,7 @@ class ReportController extends BaseController
             })
             ->get(DB::raw('SUM(GrandTotal)  As sum'))
             ->first()->sum;
-    
+
         $item['purchases_return'] = PurchaseReturn::where('deleted_at', '=', null)
             ->whereBetween('date', array($request->from, $request->to))
             ->where(function ($query) use ($view_records) {
@@ -1758,53 +1747,52 @@ class ReportController extends BaseController
             })
             ->get(DB::raw('SUM(GrandTotal)  As sum'))
             ->first()->sum;
-        
+
 
         //calcul profit
-        $product_sale_data = Sale::join('sale_details' , 'sales.id', '=', 'sale_details.sale_id')
-        ->select(DB::raw('sale_details.product_id , sum(sale_details.quantity) as sold_qty , sum(sale_details.total) as sold_amount'))
-        ->where('sales.deleted_at', '=', null)
-        ->where(function ($query) use ($view_records) {
-            if (!$view_records) {
-                return $query->where('sales.user_id', '=', Auth::user()->id);
-            }
-        })
-        ->whereBetween('sales.date', array($request->from, $request->to))
-        ->groupBy('sale_details.product_id')
-        ->get();
+        $product_sale_data = Sale::join('sale_details', 'sales.id', '=', 'sale_details.sale_id')
+            ->select(DB::raw('sale_details.product_id , sum(sale_details.quantity) as sold_qty , sum(sale_details.total) as sold_amount'))
+            ->where('sales.deleted_at', '=', null)
+            ->where(function ($query) use ($view_records) {
+                if (!$view_records) {
+                    return $query->where('sales.user_id', '=', Auth::user()->id);
+                }
+            })
+            ->whereBetween('sales.date', array($request->from, $request->to))
+            ->groupBy('sale_details.product_id')
+            ->get();
 
         $product_revenue = 0;
         $product_cost = 0;
         $profit = 0;
 
 
-        foreach($product_sale_data as $key => $product_sale){
+        foreach ($product_sale_data as $key => $product_sale) {
 
-        $product_purchase_data = PurchaseDetail::where('product_id' , $product_sale->product_id)->get();
+            $product_purchase_data = PurchaseDetail::where('product_id', $product_sale->product_id)->get();
 
-        $purchased_qty = 0;
-        $purchased_amount = 0;   
-        $sold_qty = $product_sale->sold_qty;
-        $product_revenue += $product_sale->sold_amount;
+            $purchased_qty = 0;
+            $purchased_amount = 0;
+            $sold_qty = $product_sale->sold_qty;
+            $product_revenue += $product_sale->sold_amount;
 
-        foreach ($product_purchase_data as $key => $product_purchase) {
-            $purchased_qty += $product_purchase->quantity;
-            $purchased_amount += $product_purchase->total;
-            if($purchased_qty >= $sold_qty){
-                $qty_diff = $purchased_qty - $sold_qty;
-                $unit_cost = $product_purchase->total / $product_purchase->quantity;
-                $purchased_amount -= ($qty_diff * $unit_cost);
-                break;
-
+            foreach ($product_purchase_data as $key => $product_purchase) {
+                $purchased_qty += $product_purchase->quantity;
+                $purchased_amount += $product_purchase->total;
+                if ($purchased_qty >= $sold_qty) {
+                    $qty_diff = $purchased_qty - $sold_qty;
+                    $unit_cost = $product_purchase->total / $product_purchase->quantity;
+                    $purchased_amount -= ($qty_diff * $unit_cost);
+                    break;
+                }
             }
-        }
 
-        $product_cost += $purchased_amount;
+            $product_cost += $purchased_amount;
         }
 
 
         $item['revenue'] = $item['sales']['sum'] - $item['return_sales'];
-        $item['profit'] = $item['revenue'] + $item['purchases_return'] - $product_cost  ;
+        $item['profit'] = $item['revenue'] + $item['purchases_return'] - $product_cost;
         // - $item['expenses']['sum'];
         $item['payment_received'] = $item['paiement_sales']['sum'] + $item['PaymentPurchaseReturns']['sum'];
         $item['payment_sent'] = $item['paiement_purchases']['sum'] + $item['PaymentSaleReturns']['sum'] + $item['expenses']['sum'];
@@ -1834,11 +1822,9 @@ class ReportController extends BaseController
         return $bytes;
     }
 
-    //-------------------- Backup Databse -------------\\
-
+    // GetBackup function
     public function GetBackup(Request $request)
     {
-
         $this->authorizeForUser($request->user('api'), 'backup', User::class);
 
         $data = [];
@@ -1851,40 +1837,35 @@ class ReportController extends BaseController
 
             $data[] = $item;
         }
-        $totalRows = sizeof($data);
+        $totalRows = count($data);
 
         return response()->json([
             'backups' => $data,
             'totalRows' => $totalRows,
         ]);
-
     }
 
-    //-------------------- Generate Databse -------------\\
-
+    // GenerateBackup function
     public function GenerateBackup(Request $request)
     {
-
         $this->authorizeForUser($request->user('api'), 'backup', User::class);
 
-        Artisan::call('database:backup');
+        Artisan::call('backup:run');
 
-        return response()->json('Generate complete success');
+        return response()->json('Backup generated successfully');
     }
 
-    //-------------------- Delete Databse -------------\\
-
+    // DeleteBackup function
     public function DeleteBackup(Request $request, $name)
     {
-
         $this->authorizeForUser($request->user('api'), 'backup', User::class);
 
-        foreach (glob(storage_path() . '/app/public/backup/*') as $filename) {
-            $path = storage_path() . '/app/public/backup/' . basename($name);
-            if (file_exists($path)) {
-                @unlink($path);
-            }
+        $path = storage_path() . '/app/public/backup/' . $name;
+        if (file_exists($path)) {
+            @unlink($path);
+            return response()->json('Backup deleted successfully');
+        } else {
+            return response()->json('Backup not found', 404);
         }
     }
-
 }
